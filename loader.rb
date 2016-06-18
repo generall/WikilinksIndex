@@ -30,35 +30,40 @@ def convert_to_json(wikilink)
 end
 
 def main()
-  transport = Thrift::BufferedTransport.new(File.new(DATA_FILE));
-  protocol = Thrift::BinaryProtocol.new(transport)
-  searcher = WikiSeracher.new
 
-  item = WikiLinkItem.new
-  urls = []
-  buffer = []
-  n = 0
+  ARGV.each do |file|
 
-  begin
-    while item.read(protocol) == nil
-      mentions = convert_to_json(item)
-      mentions.each do |mention|
-        urls.push mention[:concept]
-        buffer.push mention
-        if buffer.size > 10000
-          searcher.add_mentions(buffer)
-          buffer.clear
-          n += 1
-          puts n
+    transport = Thrift::BufferedTransport.new(File.new(file));
+    protocol = Thrift::BinaryProtocol.new(transport)
+    searcher = WikiSeracher.new
+
+    item = WikiLinkItem.new
+    urls = []
+    buffer = []
+    n = 0
+
+    begin
+      while item.read(protocol) == nil
+        mentions = convert_to_json(item)
+        mentions.each do |mention|
+          urls.push mention[:concept]
+          buffer.push mention
+          if buffer.size > 10000
+            searcher.add_mentions(buffer)
+            buffer.clear
+            n += 1
+            puts n
+          end
         end
       end
+    rescue Exception => e
+      puts e.message
     end
-  rescue Exception => e
-    puts e.message
+
+    File.write("urls.txt", urls.join('\n') + '\n', mode: 'a')
+    urls.clear
   end
 
-  File.write("urls.txt", urls.join('\n'))
-  
   binding.pry
 end
 
