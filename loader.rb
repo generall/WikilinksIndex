@@ -33,6 +33,7 @@ def main()
 
   ARGV.each do |file|
 
+    puts file
     transport = Thrift::BufferedTransport.new(File.new(file));
     protocol = Thrift::BinaryProtocol.new(transport)
     searcher = WikiSeracher.new
